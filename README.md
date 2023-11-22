@@ -23,6 +23,13 @@ download the jlink software here https://www.segger.com/downloads/jlink/
 
 `<install_path>/ncs/v2.5.0/zephyr/boards/arm/nrf5340dk_nrf5340/nrf5340dk_nrf5340_cpunet.dts`
 
+## General-Purpose Input/Output (GPIO)
+
+https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/hardware/peripherals/gpio.html#api-reference
+
 # References
 
 - [devicetree specifications](https://www.devicetree.org/specifications/)
+- [nRF5340 DK](https://www.nordicsemi.com/Products/Development-hardware/nRF5340-DK/Download?lang=en#infotabs)
+- [zephyr device driver model](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/kernel/drivers/index.html#device-model-api)
+- [nRF Connect SDK Fundamentals Course Exercises](https://github.com/NordicDeveloperAcademy/ncs-fund/tree/main)
