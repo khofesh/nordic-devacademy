@@ -1,6 +1,6 @@
 {
   "nrf-connect.applications": [
-    "${workspaceFolder}/nrf-connect-sdk-fundamentals/ncs-fund/v2.x.x/lesson2/fund_less2_exer1"
+    "${workspaceFolder}/nrf-connect-sdk-fundamentals/ncs-fund/v2.x.x/lesson2/fund_less2_exer2"
   ],
   "files.associations": {
     "*.yaml": "yaml",
