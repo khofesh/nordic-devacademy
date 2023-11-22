@@ -10,3 +10,6 @@ https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/config_and_build
 
 **Kconfig search**
 https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/kconfig/index.html
+
+**Configuration System (Kconfig)**
+https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/build/kconfig/index.html
