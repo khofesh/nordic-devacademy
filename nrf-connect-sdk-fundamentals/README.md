@@ -35,3 +35,13 @@ https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/hardware/peri
 > Zephyr RTOS is by default a tickless RTOS. A tickless RTOS is completely event-driven,
 > which means that instead of having periodic timer interrupts to wake up the scheduler,
 > it is woken based on events known as rescheduling points.
+
+## thread synchronization
+
+- https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/kernel/services/synchronization/semaphores.html
+- https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/kernel/services/synchronization/mutexes.html
+- https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/kernel/services/synchronization/mutexes.html#priority-inheritance
+
+> The main differences are that semaphores have a maximum value that is set at initialization,
+> while mutexes have ownership property, i.e only the thread incrementing its value can
+> decrement it, until zero when it is relinquished.
