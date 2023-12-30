@@ -11,18 +11,29 @@
 #include <dk_buttons_and_leds.h>
 
 /* STEP 2.1 - Declare the Company identifier (Company ID) */
+#define COMPANY_ID_CODE 0x0059
 
 /* STEP 2.2 - Declare the structure for your custom data  */
+typedef struct adv_mfg_data
+{
+	uint16_t company_code; // company identifier code
+	uint16_t number_press; // number of times button 1 is pressed
+} adv_mfg_data_type;
 
 #define USER_BUTTON DK_BTN1_MSK
 
 /* STEP 1 - Create an LE Advertising Parameters variable */
+// set the advertising interval to about 500 ms (500 ms/0.625 ms =800 (N))
+static struct bt_le_adv_param *adv_param = BT_LE_ADV_PARAM(
+	BT_LE_ADV_OPT_NONE,
+	800, 801, NULL);
 
 /* STEP 2.3 - Define and initialize a variable of type adv_mfg_data_type */
+static adv_mfg_data_type adv_mfg_data = {COMPANY_ID_CODE, 0x00};
 
-static unsigned char url_data[] = { 0x17, '/', '/', 'a', 'c', 'a', 'd', 'e', 'm',
-				    'y',  '.', 'n', 'o', 'r', 'd', 'i', 'c', 's',
-				    'e',  'm', 'i', '.', 'c', 'o', 'm' };
+static unsigned char url_data[] = {0x17, '/', '/', 'a', 'c', 'a', 'd', 'e', 'm',
+								   'y', '.', 'n', 'o', 'r', 'd', 'i', 'c', 's',
+								   'e', 'm', 'i', '.', 'c', 'o', 'm'};
 LOG_MODULE_REGISTER(Lesson2_Exercise2, LOG_LEVEL_INF);
 
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
@@ -35,15 +46,35 @@ static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
 	BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
 	/* STEP 3 - Include the Manufacturer Specific Data in the advertising packet. */
-
+	BT_DATA(BT_DATA_MANUFACTURER_DATA, (unsigned char *)&adv_mfg_data, sizeof(adv_mfg_data)),
 };
 
 static const struct bt_data sd[] = {
 	BT_DATA(BT_DATA_URI, url_data, sizeof(url_data)),
 };
 /* STEP 5 - Add the definition of callback function and update the advertising data dynamically */
+static void button_changed(uint32_t button_state, uint32_t has_changed)
+{
+	if (has_changed & button_state & USER_BUTTON)
+	{
+		adv_mfg_data.number_press += 1;
+		bt_le_adv_update_data(ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
+	}
+}
 
 /* STEP 4.1 - Define the initialization function of the buttons and setup interrupt.  */
+// https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/others/dk_buttons_and_leds.html
+static int init_button()
+{
+	int err;
+	err = dk_buttons_init(button_changed);
+	if (err)
+	{
+		printk("cannot init buttons (err: %d)\n", err);
+	}
+
+	return err;
+}
 
 void main(void)
 {
@@ -53,14 +84,22 @@ void main(void)
 	LOG_INF("Starting Lesson 2 - Exercise 2 \n");
 
 	err = dk_leds_init();
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("LEDs init failed (err %d)\n", err);
 		return;
 	}
 	/* STEP 4.2 - Setup buttons on your board  */
+	err = init_button();
+	if (err)
+	{
+		printk("button init failed (err %d)\n", err);
+		return;
+	}
 
 	err = bt_enable(NULL);
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Bluetooth init failed (err %d)\n", err);
 		return;
 	}
@@ -68,14 +107,16 @@ void main(void)
 	LOG_INF("Bluetooth initialized\n");
 
 	err = bt_le_adv_start(adv_param, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Advertising failed to start (err %d)\n", err);
 		return;
 	}
 
 	LOG_INF("Advertising successfully started\n");
 
-	for (;;) {
+	for (;;)
+	{
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
 	}
