@@ -11,6 +11,7 @@
 - https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/connectivity/bluetooth/api/gap.html#c.BT_DATA_FLAGS
 - [assigned numbers document](https://btprodspecificationrefs.blob.core.windows.net/assigned-numbers/Assigned%20Number%20Types/Assigned_Numbers.pdf)
 - https://www.bluetooth.com/specifications/assigned-numbers/
+- [UUID helper macros and definitions](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/connectivity/bluetooth/api/uuid.html#universal-unique-identifiers-uuids)
 
 **On Controller**
 
