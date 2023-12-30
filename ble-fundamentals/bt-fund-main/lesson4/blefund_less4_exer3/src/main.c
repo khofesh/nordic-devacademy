@@ -61,8 +61,16 @@ static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(nordic_nus_uart));
 static struct k_work_delayable uart_work;
 
 /* STEP 6.2 - Declare the struct of the data item of the FIFOs */
+struct uart_data_t
+{
+	void *fifo_reserved;
+	uint8_t data[CONFIG_BT_NUS_UART_BUFFER_SIZE];
+	uint16_t len;
+};
 
 /* STEP 6.1 - Declare the FIFOs */
+static K_FIFO_DEFINE(fifo_uart_tx_data);
+static K_FIFO_DEFINE(fifo_uart_rx_data);
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -88,29 +96,36 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	static uint8_t *aborted_buf;
 	static bool disable_req;
 
-	switch (evt->type) {
+	switch (evt->type)
+	{
 	case UART_TX_DONE:
 		LOG_DBG("UART_TX_DONE");
-		if ((evt->data.tx.len == 0) || (!evt->data.tx.buf)) {
+		if ((evt->data.tx.len == 0) || (!evt->data.tx.buf))
+		{
 			return;
 		}
 
-		if (aborted_buf) {
+		if (aborted_buf)
+		{
 			buf = CONTAINER_OF(aborted_buf, struct uart_data_t, data);
 			aborted_buf = NULL;
 			aborted_len = 0;
-		} else {
+		}
+		else
+		{
 			buf = CONTAINER_OF(evt->data.tx.buf, struct uart_data_t, data);
 		}
 
 		k_free(buf);
 
 		buf = k_fifo_get(&fifo_uart_tx_data, K_NO_WAIT);
-		if (!buf) {
+		if (!buf)
+		{
 			return;
 		}
 
-		if (uart_tx(uart, buf->data, buf->len, SYS_FOREVER_MS)) {
+		if (uart_tx(uart, buf->data, buf->len, SYS_FOREVER_MS))
+		{
 			LOG_WRN("Failed to send data over UART");
 		}
 
@@ -121,12 +136,14 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		buf = CONTAINER_OF(evt->data.rx.buf, struct uart_data_t, data);
 		buf->len += evt->data.rx.len;
 
-		if (disable_req) {
+		if (disable_req)
+		{
 			return;
 		}
 
 		if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
-		    (evt->data.rx.buf[buf->len - 1] == '\r')) {
+			(evt->data.rx.buf[buf->len - 1] == '\r'))
+		{
 			disable_req = true;
 			uart_rx_disable(uart);
 		}
@@ -138,9 +155,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		disable_req = false;
 
 		buf = k_malloc(sizeof(*buf));
-		if (buf) {
+		if (buf)
+		{
 			buf->len = 0;
-		} else {
+		}
+		else
+		{
 			LOG_WRN("Not able to allocate UART receive buffer");
 			k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
 			return;
@@ -153,10 +173,13 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 	case UART_RX_BUF_REQUEST:
 		LOG_DBG("UART_RX_BUF_REQUEST");
 		buf = k_malloc(sizeof(*buf));
-		if (buf) {
+		if (buf)
+		{
 			buf->len = 0;
 			uart_rx_buf_rsp(uart, buf->data, sizeof(buf->data));
-		} else {
+		}
+		else
+		{
 			LOG_WRN("Not able to allocate UART receive buffer");
 		}
 
@@ -166,10 +189,13 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 		LOG_DBG("UART_RX_BUF_RELEASED");
 		buf = CONTAINER_OF(evt->data.rx_buf.buf, struct uart_data_t, data);
 
-		if (buf->len > 0) {
+		if (buf->len > 0)
+		{
 			/* STEP 9.1 -  Push the data received from the UART peripheral into the fifo_uart_rx_data FIFO */
-
-		} else {
+			k_fifo_put(&fifo_uart_rx_data, buf);
+		}
+		else
+		{
 			k_free(buf);
 		}
 
@@ -177,7 +203,8 @@ static void uart_cb(const struct device *dev, struct uart_event *evt, void *user
 
 	case UART_TX_ABORTED:
 		LOG_DBG("UART_TX_ABORTED");
-		if (!aborted_buf) {
+		if (!aborted_buf)
+		{
 			aborted_buf = (uint8_t *)evt->data.tx.buf;
 		}
 
@@ -198,9 +225,12 @@ static void uart_work_handler(struct k_work *item)
 	struct uart_data_t *buf;
 
 	buf = k_malloc(sizeof(*buf));
-	if (buf) {
+	if (buf)
+	{
 		buf->len = 0;
-	} else {
+	}
+	else
+	{
 		LOG_WRN("Not able to allocate UART receive buffer");
 		k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
 		return;
@@ -223,46 +253,57 @@ static int uart_init(void)
 	struct uart_data_t *rx;
 	struct uart_data_t *tx;
 
-	if (!device_is_ready(uart)) {
+	if (!device_is_ready(uart))
+	{
 		return -ENODEV;
 	}
 
-	if (IS_ENABLED(CONFIG_USB_DEVICE_STACK)) {
+	if (IS_ENABLED(CONFIG_USB_DEVICE_STACK))
+	{
 		err = usb_enable(NULL);
-		if (err && (err != -EALREADY)) {
+		if (err && (err != -EALREADY))
+		{
 			LOG_ERR("Failed to enable USB");
 			return err;
 		}
 	}
 
 	rx = k_malloc(sizeof(*rx));
-	if (rx) {
+	if (rx)
+	{
 		rx->len = 0;
-	} else {
+	}
+	else
+	{
 		return -ENOMEM;
 	}
 
 	k_work_init_delayable(&uart_work, uart_work_handler);
 
-	if (IS_ENABLED(CONFIG_BT_NUS_UART_ASYNC_ADAPTER) && !uart_test_async_api(uart)) {
+	if (IS_ENABLED(CONFIG_BT_NUS_UART_ASYNC_ADAPTER) && !uart_test_async_api(uart))
+	{
 		/* Implement API adapter */
 		uart_async_adapter_init(async_adapter, uart);
 		uart = async_adapter;
 	}
 
 	err = uart_callback_set(uart, uart_cb, NULL);
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Cannot initialize UART callback");
 		return err;
 	}
 
-	if (IS_ENABLED(CONFIG_UART_LINE_CTRL)) {
+	if (IS_ENABLED(CONFIG_UART_LINE_CTRL))
+	{
 		LOG_INF("Wait for DTR");
-		while (true) {
+		while (true)
+		{
 			uint32_t dtr = 0;
 
 			uart_line_ctrl_get(uart, UART_LINE_CTRL_DTR, &dtr);
-			if (dtr) {
+			if (dtr)
+			{
 				break;
 			}
 			/* Give CPU resources to low priority threads. */
@@ -270,34 +311,41 @@ static int uart_init(void)
 		}
 		LOG_INF("DTR set");
 		err = uart_line_ctrl_set(uart, UART_LINE_CTRL_DCD, 1);
-		if (err) {
+		if (err)
+		{
 			LOG_WRN("Failed to set DCD, ret code %d", err);
 		}
 		err = uart_line_ctrl_set(uart, UART_LINE_CTRL_DSR, 1);
-		if (err) {
+		if (err)
+		{
 			LOG_WRN("Failed to set DSR, ret code %d", err);
 		}
 	}
 
 	tx = k_malloc(sizeof(*tx));
 
-	if (tx) {
+	if (tx)
+	{
 		pos = snprintf(tx->data, sizeof(tx->data),
-			       "Starting Nordic UART service example\r\n");
+					   "Starting Nordic UART service example\r\n");
 
-		if ((pos < 0) || (pos >= sizeof(tx->data))) {
+		if ((pos < 0) || (pos >= sizeof(tx->data)))
+		{
 			k_free(tx);
 			LOG_ERR("snprintf returned %d", pos);
 			return -ENOMEM;
 		}
 
 		tx->len = pos;
-	} else {
+	}
+	else
+	{
 		return -ENOMEM;
 	}
 	// Send a welcome message over UART
 	err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Cannot display welcome message (err: %d)", err);
 		return err;
 	}
@@ -309,7 +357,8 @@ static void connected(struct bt_conn *conn, uint8_t err)
 {
 	char addr[BT_ADDR_LE_STR_LEN];
 
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Connection failed (err %u)", err);
 		return;
 	}
@@ -330,12 +379,14 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 
 	LOG_INF("Disconnected: %s (reason %u)", addr, reason);
 
-	if (auth_conn) {
+	if (auth_conn)
+	{
 		bt_conn_unref(auth_conn);
 		auth_conn = NULL;
 	}
 
-	if (current_conn) {
+	if (current_conn)
+	{
 		bt_conn_unref(current_conn);
 		current_conn = NULL;
 		dk_set_led_off(CON_STATUS_LED);
@@ -349,9 +400,12 @@ static void security_changed(struct bt_conn *conn, bt_security_t level, enum bt_
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	if (!err) {
+	if (!err)
+	{
 		LOG_INF("Security changed: %s level %u", addr, level);
-	} else {
+	}
+	else
+	{
 		LOG_WRN("Security failed: %s level %u err %d", addr, level, err);
 	}
 }
@@ -420,9 +474,9 @@ static struct bt_conn_auth_cb conn_auth_callbacks = {
 	.cancel = auth_cancel,
 };
 
-static struct bt_conn_auth_info_cb conn_auth_info_callbacks = { .pairing_complete =
-									pairing_complete,
-								.pairing_failed = pairing_failed };
+static struct bt_conn_auth_info_cb conn_auth_info_callbacks = {.pairing_complete =
+																   pairing_complete,
+															   .pairing_failed = pairing_failed};
 #else
 static struct bt_conn_auth_cb conn_auth_callbacks;
 static struct bt_conn_auth_info_cb conn_auth_info_callbacks;
@@ -431,16 +485,18 @@ static struct bt_conn_auth_info_cb conn_auth_info_callbacks;
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint16_t len)
 {
 	int err;
-	char addr[BT_ADDR_LE_STR_LEN] = { 0 };
+	char addr[BT_ADDR_LE_STR_LEN] = {0};
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
 
 	LOG_INF("Received data from: %s", addr);
 
-	for (uint16_t pos = 0; pos != len;) {
+	for (uint16_t pos = 0; pos != len;)
+	{
 		struct uart_data_t *tx = k_malloc(sizeof(*tx));
 
-		if (!tx) {
+		if (!tx)
+		{
 			LOG_WRN("Not able to allocate UART send data buffer");
 			return;
 		}
@@ -448,9 +504,12 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint1
 		/* Keep the last byte of TX buffer for potential LF char. */
 		size_t tx_data_size = sizeof(tx->data) - 1;
 
-		if ((len - pos) > tx_data_size) {
+		if ((len - pos) > tx_data_size)
+		{
 			tx->len = tx_data_size;
-		} else {
+		}
+		else
+		{
 			tx->len = (len - pos);
 		}
 
@@ -461,20 +520,30 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint1
 		/* Append the LF character when the CR character triggered
 		 * transmission from the peer.
 		 */
-		if ((pos == len) && (data[len - 1] == '\r')) {
+		if ((pos == len) && (data[len - 1] == '\r'))
+		{
 			tx->data[tx->len] = '\n';
 			tx->len++;
 		}
 		/* STEP 8.3 - Forward the data received over Bluetooth LE to the UART peripheral */
+		err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
+		if (err)
+		{
+			k_fifo_put(&fifo_uart_tx_data, tx);
+		}
 	}
 }
 /* STEP 8.1 - Create a variable of type bt_nus_cb and initialize it */
+static struct bt_nus_cb nus_cb = {
+	.received = bt_receive_cb,
+};
 
 void error(void)
 {
 	dk_set_leds_state(DK_ALL_LEDS_MSK, DK_NO_LEDS_MSK);
 
-	while (true) {
+	while (true)
+	{
 		/* Spin for ever */
 		k_sleep(K_MSEC(1000));
 	}
@@ -483,10 +552,13 @@ void error(void)
 #ifdef CONFIG_BT_NUS_SECURITY_ENABLED
 static void num_comp_reply(bool accept)
 {
-	if (accept) {
+	if (accept)
+	{
 		bt_conn_auth_passkey_confirm(auth_conn);
 		LOG_INF("Numeric Match, conn %p", (void *)auth_conn);
-	} else {
+	}
+	else
+	{
 		bt_conn_auth_cancel(auth_conn);
 		LOG_INF("Numeric Reject, conn %p", (void *)auth_conn);
 	}
@@ -499,12 +571,15 @@ void button_changed(uint32_t button_state, uint32_t has_changed)
 {
 	uint32_t buttons = button_state & has_changed;
 
-	if (auth_conn) {
-		if (buttons & KEY_PASSKEY_ACCEPT) {
+	if (auth_conn)
+	{
+		if (buttons & KEY_PASSKEY_ACCEPT)
+		{
 			num_comp_reply(true);
 		}
 
-		if (buttons & KEY_PASSKEY_REJECT) {
+		if (buttons & KEY_PASSKEY_REJECT)
+		{
 			num_comp_reply(false);
 		}
 	}
@@ -517,13 +592,15 @@ static void configure_gpio(void)
 
 #ifdef CONFIG_BT_NUS_SECURITY_ENABLED
 	err = dk_buttons_init(button_changed);
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Cannot init buttons (err: %d)", err);
 	}
 #endif /* CONFIG_BT_NUS_SECURITY_ENABLED */
 
 	err = dk_leds_init();
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Cannot init LEDs (err: %d)", err);
 	}
 }
@@ -535,23 +612,32 @@ void main(void)
 
 	configure_gpio();
 	/* STEP 7 - Initialize the UART Peripheral  */
+	err = uart_init();
+	if (err)
+	{
+		error();
+	}
 
-	if (IS_ENABLED(CONFIG_BT_NUS_SECURITY_ENABLED)) {
+	if (IS_ENABLED(CONFIG_BT_NUS_SECURITY_ENABLED))
+	{
 		err = bt_conn_auth_cb_register(&conn_auth_callbacks);
-		if (err) {
+		if (err)
+		{
 			LOG_ERR("Failed to register authorization callbacks.\n");
 			return;
 		}
 
 		err = bt_conn_auth_info_cb_register(&conn_auth_info_callbacks);
-		if (err) {
+		if (err)
+		{
 			LOG_ERR("Failed to register authorization info callbacks.\n");
 			return;
 		}
 	}
 
 	err = bt_enable(NULL);
-	if (err) {
+	if (err)
+	{
 		error();
 	}
 
@@ -559,22 +645,48 @@ void main(void)
 
 	k_sem_give(&ble_init_ok);
 
-	if (IS_ENABLED(CONFIG_SETTINGS)) {
+	if (IS_ENABLED(CONFIG_SETTINGS))
+	{
 		settings_load();
 	}
 	/* STEP 8.2 - Pass your application callback function to the NUS service */
+	err = bt_nus_init(&nus_cb);
+	if (err)
+	{
+		LOG_ERR("failed to initialize UART service (err: %d)", err);
+		return;
+	}
 
 	err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Advertising failed to start (err %d)", err);
 		return;
 	}
 
-	for (;;) {
+	for (;;)
+	{
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
 	}
 }
 /* STEP 9.3 - Define the thread function  */
+void ble_write_thread()
+{
+	k_sem_take(&ble_init_ok, K_FOREVER);
+
+	for (;;)
+	{
+		struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data,
+											 K_FOREVER);
+		if (bt_nus_send(NULL, buf->data, buf->len))
+		{
+			LOG_WRN("failed to send data over BLE connection");
+		}
+		k_free(buf);
+	}
+}
 
 /* STEP 9.2 - Create a dedicated thread for sending the data over Bluetooth LE. */
+K_THREAD_DEFINE(ble_write_thread_id, STACKSIZE, ble_write_thread, NULL, NULL, NULL,
+				PRIORITY, 0, 0);

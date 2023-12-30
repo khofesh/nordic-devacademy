@@ -15,6 +15,8 @@
 - [PHY: radio modes](https://academy.nordicsemi.com/topic/phy-modes/)
 - https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/others/dk_buttons_and_leds.html
 - https://www.uuidgenerator.net/
+- [nordic UART service (NUS)](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html#nus-service-readme)
+- [FIFO data structures](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/kernel/services/data_passing/fifos.html)
 
 ## On Controller
 
@@ -31,6 +33,13 @@
 https://github.com/nrfconnect/sdk-zephyr/blob/main/include/zephyr/bluetooth/hci_types.h#L3020
 
 19, which is written 0x13 in hexadecimal refers to BT_HCI_ERR_REMOTE_USER_TERM_CONN, which means that the remote user terminated the connection
+
+## lesson 4 exercise 3
+
+> The default Maximum Transmission Unit (MTU) set in the nRF Connect SDK Bluetooth stack is 23
+> bytes. It means you can’t send more data than can fit in the ATT MTU in one notification push.
+> If you want to send more data in a single go, you need to increase this value; longer ATT
+> payloads can be achieved, increasing the ATT throughput.
 
 ## References
 
