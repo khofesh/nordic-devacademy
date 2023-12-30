@@ -13,13 +13,14 @@
 
 #include <dk_buttons_and_leds.h>
 /* STEP 7 - Include the header file of MY LBS customer service */
+#include "my_lbs.h"
 
 static struct bt_le_adv_param *adv_param = BT_LE_ADV_PARAM(
 	(BT_LE_ADV_OPT_CONNECTABLE |
 	 BT_LE_ADV_OPT_USE_IDENTITY), /* Connectable advertising and use identity address */
-	800, /* Min Advertising Interval 500ms (800*0.625ms) */
-	801, /* Max Advertising Interval 500.625ms (801*0.625ms) */
-	NULL); /* Set to NULL for undirected advertising */
+	800,						  /* Min Advertising Interval 500ms (800*0.625ms) */
+	801,						  /* Max Advertising Interval 500.625ms (801*0.625ms) */
+	NULL);						  /* Set to NULL for undirected advertising */
 
 LOG_MODULE_REGISTER(Lesson4_Exercise1, LOG_LEVEL_INF);
 
@@ -30,8 +31,10 @@ LOG_MODULE_REGISTER(Lesson4_Exercise1, LOG_LEVEL_INF);
 #define CON_STATUS_LED DK_LED2
 
 /* STEP 8.1 - Specify the LED to control */
+#define USER_LED DK_LED3
 
 /* STEP 9.1 - Specify the button to monitor */
+#define USER_BUTTON DK_BTN1_MSK
 
 #define RUN_LED_BLINK_INTERVAL 1000
 
@@ -48,21 +51,35 @@ static const struct bt_data sd[] = {
 };
 
 /* STEP 8.2 - Define the application callback function for controlling the LED */
+static void app_led_cb(bool led_state)
+{
+	dk_set_led(USER_LED, led_state);
+}
 
 /* STEP 9.2 - Define the application callback function for reading the state of the button */
+static bool app_button_cb()
+{
+	return app_button_state;
+}
 
 /* STEP 10 - Declare a varaible app_callbacks of type my_lbs_cb and initiate its members to the applications call back functions we developed in steps 8.2 and 9.2. */
+static struct my_lbs_cb app_callbacks = {
+	.led_cb = app_led_cb,
+	.button_cb = app_button_cb,
+};
 
 static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
-	if (has_changed & USER_BUTTON) {
+	if (has_changed & USER_BUTTON)
+	{
 		uint32_t user_button_state = button_state & USER_BUTTON;
 		app_button_state = user_button_state ? true : false;
 	}
 }
 static void on_connected(struct bt_conn *conn, uint8_t err)
 {
-	if (err) {
+	if (err)
+	{
 		printk("Connection failed (err %u)\n", err);
 		return;
 	}
@@ -89,7 +106,8 @@ static int init_button(void)
 	int err;
 
 	err = dk_buttons_init(button_changed);
-	if (err) {
+	if (err)
+	{
 		printk("Cannot init buttons (err: %d)\n", err);
 	}
 
@@ -104,36 +122,47 @@ void main(void)
 	LOG_INF("Starting Lesson 4 - Exercise 1 \n");
 
 	err = dk_leds_init();
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("LEDs init failed (err %d)\n", err);
 		return;
 	}
 
 	err = init_button();
-	if (err) {
+	if (err)
+	{
 		printk("Button init failed (err %d)\n", err);
 		return;
 	}
 
 	err = bt_enable(NULL);
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Bluetooth init failed (err %d)\n", err);
 		return;
 	}
 	bt_conn_cb_register(&connection_callbacks);
 
 	/* STEP 11 - Pass your application callback functions stored in app_callbacks to the MY LBS service */
+	err = my_lbs_init(&app_callbacks);
+	if (err)
+	{
+		printk("failed to init LBS (err: %d)\n", err);
+		return;
+	}
 
 	LOG_INF("Bluetooth initialized\n");
 	err = bt_le_adv_start(adv_param, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
-	if (err) {
+	if (err)
+	{
 		LOG_ERR("Advertising failed to start (err %d)\n", err);
 		return;
 	}
 
 	LOG_INF("Advertising successfully started\n");
 
-	for (;;) {
+	for (;;)
+	{
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
 	}

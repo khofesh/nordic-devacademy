@@ -45,3 +45,7 @@ https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/hardware/peri
 > The main differences are that semaphores have a maximum value that is set at initialization,
 > while mutexes have ownership property, i.e only the thread incrementing its value can
 > decrement it, until zero when it is relinquished.
+
+## references
+
+- https://github.com/NordicDeveloperAcademy/ncs-fund
