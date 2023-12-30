@@ -14,6 +14,7 @@
 - [UUID helper macros and definitions](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/connectivity/bluetooth/api/uuid.html#universal-unique-identifiers-uuids)
 - [PHY: radio modes](https://academy.nordicsemi.com/topic/phy-modes/)
 - https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/others/dk_buttons_and_leds.html
+- https://www.uuidgenerator.net/
 
 ## On Controller
 
