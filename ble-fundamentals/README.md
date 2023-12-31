@@ -43,6 +43,18 @@ https://github.com/nrfconnect/sdk-zephyr/blob/main/include/zephyr/bluetooth/hci_
 > If you want to send more data in a single go, you need to increase this value; longer ATT
 > payloads can be achieved, increasing the ATT throughput.
 
+## sniffer
+
+- https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_ble%2FUG%2Fsniffer_ble%2Fintro.html
+- https://www.nordicsemi.com/Products/Development-tools/nRF-Sniffer-for-Bluetooth-LE/Download?lang=en#infotabs
+
+> somehow, it works under root user
+
+1. programming the nRF52840 dongle
+   https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_nc_programmer%2FUG%2Fnrf_connect_programmer%2Fncp_programming_dongle.html
+2. installing the sniffer
+   https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_ble%2FUG%2Fsniffer_ble%2Finstalling_sniffer_plugin.html
+
 ## References
 
 - https://github.com/NordicDeveloperAcademy/bt-fund
