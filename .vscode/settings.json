@@ -1,6 +1,6 @@
 {
   "nrf-connect.applications": [
-    "${workspaceFolder}/ble-fundamentals/bt-fund-main/lesson4/blefund_less4_exer3"
+    "${workspaceFolder}/ble-fundamentals/bt-fund-main/lesson5/blefund_less5_exer1"
   ],
   "files.associations": {
     "*.yaml": "yaml",

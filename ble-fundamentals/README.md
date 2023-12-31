@@ -17,6 +17,8 @@
 - https://www.uuidgenerator.net/
 - [nordic UART service (NUS)](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/libraries/bluetooth_services/services/nus.html#nus-service-readme)
 - [FIFO data structures](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/kernel/services/data_passing/fifos.html)
+- [legacy pairing vs LE secure connections](https://academy.nordicsemi.com/topic/legacy-pairing-vs-le-secure-connection/)
+- [bluetooth peripheral LBS sample](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/samples/bluetooth/peripheral_lbs/README.html)
 
 ## On Controller
 

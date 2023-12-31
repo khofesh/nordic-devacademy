@@ -39,7 +39,8 @@ static const struct bt_data sd[] = {
 
 static void on_connected(struct bt_conn *conn, uint8_t err)
 {
-	if (err) {
+	if (err)
+	{
 		LOG_INF("Connection failed (err %u)\n", err);
 		return;
 	}
@@ -57,19 +58,52 @@ static void on_disconnected(struct bt_conn *conn, uint8_t reason)
 }
 
 /* STEP 5.2 Define the callback function on_security_changed() */
+static void on_security_changed(struct bt_conn *conn, bt_security_t level,
+								enum bt_security_err err)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+	if (!err)
+	{
+		LOG_INF("security changed: %s level %u\n", addr, level);
+	}
+	else
+	{
+		LOG_INF("security failed: %s level %u err %d\n", addr, level, err);
+	}
+}
 
 struct bt_conn_cb connection_callbacks = {
 	.connected = on_connected,
 	.disconnected = on_disconnected,
 	/* STEP 5.1 - Add the security_changed member to the callback structure */
+	.security_changed = on_security_changed,
 
 };
 
 /* STEP 9.1 - Define the callback function auth_passkey_display */
+static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+	LOG_INF("passkey for %s: %06u\n", addr, passkey);
+}
 
 /* STEP 9.2 - Define the callback function auth_cancel */
+static void auth_cancel(struct bt_conn *conn)
+{
+	char addr[BT_ADDR_LE_STR_LEN];
+	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+	LOG_INF("pairing cancelled: %s\n", addr);
+}
 
 /* STEP 9.3 - Declare the authenticated pairing callback structure */
+static struct bt_conn_auth_cb conn_auth_callbacks = {
+	.passkey_display = auth_passkey_display,
+	.cancel = auth_cancel,
+};
 
 static void app_led_cb(bool led_state)
 {
@@ -88,7 +122,8 @@ static struct bt_lbs_cb lbs_callbacs = {
 
 static void button_changed(uint32_t button_state, uint32_t has_changed)
 {
-	if (has_changed & USER_BUTTON) {
+	if (has_changed & USER_BUTTON)
+	{
 		uint32_t user_button_state = button_state & USER_BUTTON;
 
 		bt_lbs_send_button_state(user_button_state);
@@ -101,7 +136,8 @@ static int init_button(void)
 	int err;
 
 	err = dk_buttons_init(button_changed);
-	if (err) {
+	if (err)
+	{
 		LOG_INF("Cannot init buttons (err: %d)\n", err);
 	}
 
@@ -116,29 +152,39 @@ void main(void)
 	LOG_INF("Starting Bluetooth Peripheral LBS example\n");
 
 	err = dk_leds_init();
-	if (err) {
+	if (err)
+	{
 		LOG_INF("LEDs init failed (err %d)\n", err);
 		return;
 	}
 
 	err = init_button();
-	if (err) {
+	if (err)
+	{
 		LOG_INF("Button init failed (err %d)\n", err);
 		return;
 	}
 
 	/* STEP 10 - Register the authentication callbacks */
+	err = bt_conn_auth_cb_register(&conn_auth_callbacks);
+	if (err)
+	{
+		LOG_INF("failed to register authorization callbacks\n");
+		return;
+	}
 
 	bt_conn_cb_register(&connection_callbacks);
 
 	err = bt_enable(NULL);
-	if (err) {
+	if (err)
+	{
 		LOG_INF("Bluetooth init failed (err %d)\n", err);
 		return;
 	}
 
 	err = bt_lbs_init(&lbs_callbacs);
-	if (err) {
+	if (err)
+	{
 		LOG_INF("Failed to init LBS (err:%d)\n", err);
 		return;
 	}
@@ -146,14 +192,16 @@ void main(void)
 	LOG_INF("Bluetooth initialized\n");
 
 	err = bt_le_adv_start(BT_LE_ADV_CONN, ad, ARRAY_SIZE(ad), sd, ARRAY_SIZE(sd));
-	if (err) {
+	if (err)
+	{
 		LOG_INF("Advertising failed to start (err %d)\n", err);
 		return;
 	}
 
 	LOG_INF("Advertising successfully started\n");
 
-	for (;;) {
+	for (;;)
+	{
 		dk_set_led(RUN_STATUS_LED, (++blink_status) % 2);
 		k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
 	}
